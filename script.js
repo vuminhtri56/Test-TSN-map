@@ -1,201 +1,132 @@
-// Khởi tạo bản đồ tại Tân Sơn Nhất
-const map = L.map('map').setView([10.818462, 106.658349], 15); // Tọa độ Tân Sơn Nhất
+// Cấu hình Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBwa9SZPRVkq3iBD1BifxT6tT34EnyRIhQ",
+  authDomain: "test-tsn-map.firebaseapp.com",
+  databaseURL: "https://test-tsn-map-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "test-tsn-map",
+  storageBucket: "test-tsn-map.firebasestorage.app",
+  messagingSenderId: "828454384113",
+  appId: "1:828454384113:web:4eb7d1f1bb3f9894845450",
+};
 
-// Thêm tile layer (nền bản đồ)
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// Khai báo quyền người dùng
+let role = 'Admin'; // Thay đổi thành 'Editor' hoặc 'Viewer' để kiểm tra quyền
+
+// Khởi tạo bản đồ tại Tân Sơn Nhất
+const map = new google.maps.Map(document.getElementById('map'), {
+  center: { lat: 10.818462, lng: 106.658349 },
+  zoom: 15
+});
+
+
+// Thêm tile layer
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
+  attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Định nghĩa vai trò (giả lập)
-let role = 'Admin'; // Thay đổi thành 'Admin' hoặc 'Editer' để kiểm tra quyền
-
-// Kiểm tra quyền và thông báo
-if (role === 'Admin') {
-  console.log('Bạn là Admin. Có quyền chỉnh sửa toàn bộ.');
-} else if (role === 'Editer') {
-  console.log('Bạn là Editor. Có thể thêm/chỉnh sửa một số nội dung.');
-} else {
-  console.log('Bạn chỉ có quyền xem.');
-}
-if (role === 'Admin' || role === 'Editer') {
-  map.on('click', function (e) {
-    const { lat, lng } = e.latlng;
-
-    // Chỉ Admin và Editor mới có thể tạo marker
-    const newMarker = L.marker([lat, lng]).addTo(markersLayer)
-    marker1.bindPopup(`
-      <div style="width: 250px; font-family: Arial, sans-serif;">
-        <h3>Ghi chú</h3>
-        <textarea placeholder="Nhập ghi chú tại đây..." style="width: 100%; height: 60px;"></textarea><br>
-        <label><input type="checkbox"> Tùy chọn 1</label><br>
-        <label><input type="checkbox"> Tùy chọn 2</label><br><br>
-        <input type="file" accept="image/*" style="margin-bottom: 10px;"><br>
-        <button onclick="alert('Ghi chú đã được lưu!')" style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 4px;">Lưu</button>
-      </div>
-    `);
-        
-  });
-}
-
-if (role === 'Admin' || role === 'Editer') {
-  map.on('click', function (e) {
-    const { lat, lng } = e.latlng;
-    const newMarker = L.marker([lat, lng]).addTo(markersLayer)
-      .bindPopup('Marker mới: Nhập ghi chú ở đây').openPopup();
-    saveMarkersToLocalStorage(); // Lưu lại khi tạo marker
-  });
-}
-
-
-// Ví dụ tạo một marker
-const marker = L.marker([10.818462, 106.658349]).addTo(map)
-  .bindPopup('Sân bay Tân Sơn Nhất')
-  .openPopup();
-
-  // Tạo một lớp cho các marker
+// Tạo một lớp cho các marker
 const markersLayer = L.layerGroup().addTo(map);
 
-// Tạo một marker và thêm vào lớp
-const marker1 = L.marker([10.8205, 106.6603]).addTo(markersLayer)
-marker1.bindPopup(`
-  <div style="width: 250px; font-family: Arial, sans-serif;">
-    <h3>Ghi chú</h3>
-    <textarea placeholder="Nhập ghi chú tại đây..." style="width: 100%; height: 60px;"></textarea><br>
-    <label><input type="checkbox"> Tùy chọn 1</label><br>
-    <label><input type="checkbox"> Tùy chọn 2</label><br><br>
-    <input type="file" accept="image/*" style="margin-bottom: 10px;"><br>
-    <button onclick="alert('Ghi chú đã được lưu!')" style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 4px;">Lưu</button>
-  </div>
-`);
-
-
-  // Thêm lớp quản lý layer vào bản đồ
-const toggleLayerButton = L.control({ position: 'topright' });
-toggleLayerButton.onAdd = function () {
-  const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-  div.innerHTML = '<button style="background: white; padding: 10px; cursor: pointer;">Bật/Tắt Lớp</button>';
-  div.onclick = function () {
-    if (map.hasLayer(markersLayer)) {
-      map.removeLayer(markersLayer); // Tắt lớp
-      console.log('Lớp đã bị tắt.');
-    } else {
-      map.addLayer(markersLayer); // Bật lớp
-      console.log('Lớp đã được bật.');
-    }
-  };
-  return div;
-};
-toggleLayerButton.addTo(map);
-
-
-  // Tạo một polyline
-const polyline = L.polyline([
-    [10.818462, 106.658349],
-    [10.8205, 106.6603]
-  ], { color: 'blue' }).addTo(markersLayer);
-  
-  // Kiểm tra nếu trình duyệt hỗ trợ GPS
-if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(
-      position => {
-        const { latitude, longitude } = position.coords;
-  
-        // Thêm một marker để đánh dấu vị trí người dùng
-        const userMarker = L.marker([latitude, longitude], {
-          icon: L.icon({
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            iconSize: [25, 41], // Kích thước icon
-            iconAnchor: [12, 41], // Điểm neo
-          })
-        }).addTo(map).bindPopup('Bạn đang ở đây!').openPopup();
-  
-        // Zoom vào vị trí người dùng
-        map.setView([latitude, longitude], 15);
-      },
-      error => {
-        alert('Không thể lấy vị trí: ' + error.message);
-      }
-    );
-  } else {
-    alert('Trình duyệt của bạn không hỗ trợ GPS.');
-  }
-  
-  // Kiểm tra nếu trình duyệt hỗ trợ GPS
-if (navigator.geolocation) {
-  navigator.geolocation.watchPosition(
-    position => {
-      const { latitude, longitude } = position.coords;
-
-      // Thêm một marker để đánh dấu vị trí người dùng
-      const userMarker = L.marker([latitude, longitude], {
-        icon: L.icon({
-          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-          iconSize: [25, 41], // Kích thước icon
-          iconAnchor: [12, 41], // Điểm neo
-        })
-      }).addTo(map).bindPopup('Bạn đang ở đây!').openPopup();
-
-      // Zoom vào vị trí người dùng
-      map.setView([latitude, longitude], 15);
-    },
-    error => {
-      alert('Không thể lấy vị trí: ' + error.message);
-    }
-  );
-} else {
-  alert('Trình duyệt của bạn không hỗ trợ GPS.');
-}
-
-// Hàm lưu marker vào Local Storage
-function saveMarkersToLocalStorage() {
-  const markersData = [];
-  markersLayer.eachLayer(marker => {
-    if (marker instanceof L.Marker) {
-      markersData.push({
-        lat: marker.getLatLng().lat,
-        lng: marker.getLatLng().lng,
-        popupContent: marker.getPopup() ? marker.getPopup().getContent() : ''
-      });
-    }
-  });
-  localStorage.setItem('markers', JSON.stringify(markersData));
-  alert('Markers đã được lưu!');
-}
-
-// Hàm tải marker từ Local Storage
-function loadMarkersFromLocalStorage() {
-  const markersData = JSON.parse(localStorage.getItem('markers') || '[]');
-  markersData.forEach(data => {
+// Tải marker từ Firebase
+firebase.database().ref('markers').on('value', snapshot => {
+  markersLayer.clearLayers();
+  snapshot.forEach(childSnapshot => {
+    const data = childSnapshot.val();
     const marker = L.marker([data.lat, data.lng]).addTo(markersLayer)
-      .bindPopup(data.popupContent || '');
+      .bindPopup(data.popup || 'Không có ghi chú');
   });
-}
+});
 
-// Gọi hàm tải dữ liệu khi tải trang
-loadMarkersFromLocalStorage();
-
+// Sự kiện click trên bản đồ
 map.on('click', function (e) {
   if (role === 'Admin' || role === 'Editer') {
     const { lat, lng } = e.latlng;
+    const popupContent = `
+      <div>
+        <b>Marker mới</b><br>
+        Tọa độ: ${lat}, ${lng}<br>
+        <button onclick="deleteMarker(this)">Xóa Marker</button>
+      </div>
+    `;
+
     const newMarker = L.marker([lat, lng]).addTo(markersLayer)
-      .bindPopup(`
-        <div>
-          <b>Marker mới</b><br>
-          Tọa độ: ${lat}, ${lng}<br>
-          <button onclick="deleteMarker(this)">Xóa Marker</button>
-        </div>
-      `).openPopup();
-    saveMarkersToLocalStorage();
+      .bindPopup(popupContent).openPopup();
+
+    // Lưu dữ liệu vào Firebase
+    saveMarkerToFirebase(lat, lng, popupContent);
   }
 });
 
-// Hàm xóa marker
+// Lưu Marker vào Firebase
+function saveMarkerToFirebase(lat, lng, popupContent) {
+  firebase.database().ref('markers').push({
+    lat: lat,
+    lng: lng,
+    popup: popupContent
+  });
+}
+
+// Hàm xóa Marker
 function deleteMarker(button) {
   const popup = button.closest('.leaflet-popup-content');
   const marker = markersLayer.getLayers().find(m => m.getPopup().getContent() === popup.innerHTML);
   if (marker) {
     markersLayer.removeLayer(marker);
-    saveMarkersToLocalStorage();
     alert('Marker đã được xóa!');
+  }
+}
+
+let polylinePoints = [];
+const polylineLayer = L.layerGroup().addTo(map);
+
+map.on('click', function (e) {
+  if (role === 'Admin' || role === 'Editer') {
+    const { lat, lng } = e.latlng;
+    polylinePoints.push([lat, lng]);
+
+    // Vẽ đường tạm thời trên bản đồ
+    L.polyline(polylinePoints, { color: 'red' }).addTo(polylineLayer);
+  }
+});
+
+// Nút lưu polyline
+function savePolyline() {
+  if (polylinePoints.length > 1) {
+    firebase.database().ref('polylines').push(polylinePoints);
+    alert('Polyline đã được lưu!');
+    polylinePoints = []; // Reset điểm
+  } else {
+    alert('Cần ít nhất 2 điểm để vẽ đường.');
+  }
+}
+
+firebase.database().ref('polylines').on('value', snapshot => {
+  polylineLayer.clearLayers();
+  snapshot.forEach(childSnapshot => {
+    const points = childSnapshot.val();
+    L.polyline(points, { color: 'blue' }).addTo(polylineLayer);
+  });
+});
+
+const users = {
+  admin: { password: 'admin123', role: 'Admin' },
+  editor: { password: 'editor123', role: 'Editer' },
+  viewer: { password: 'viewer123', role: 'Viewer' }
+};
+
+function login() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  if (users[username] && users[username].password === password) {
+    role = users[username].role;
+    alert(`Đăng nhập thành công với quyền: ${role}`);
+    document.getElementById('login').style.display = 'none'; // Ẩn form đăng nhập
+  } else {
+    alert('Sai tên đăng nhập hoặc mật khẩu.');
   }
 }

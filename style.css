@@ -1,0 +1,6 @@
+@media (max-width: 768px) {
+    #map {
+      height: 70vh; /* Giảm chiều cao bản đồ trên màn hình nhỏ */
+    }
+  }
+  
