@@ -17,11 +17,7 @@ const database = firebase.database();
 let role = 'Admin'; // Thay đổi thành 'Editor' hoặc 'Viewer' để kiểm tra quyền
 
 // Khởi tạo bản đồ tại Tân Sơn Nhất
-const map = new google.maps.Map(document.getElementById('map'), {
-  center: { lat: 10.818462, lng: 106.658349 },
-  zoom: 15
-});
-
+const map = L.map('map').setView([10.818462, 106.658349], 15);
 
 // Thêm tile layer
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
